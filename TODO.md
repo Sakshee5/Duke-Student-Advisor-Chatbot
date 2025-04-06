@@ -1,0 +1,3 @@
+- Figure out what more tools to use
+- Optimize the current tools
+- Make UI more intuitive where you get messages from the system about what the agent is doing instead of just saying "Thinking.."
