@@ -1,0 +1,158 @@
+import streamlit as st
+from dotenv import load_dotenv
+from openai import OpenAI
+import os
+load_dotenv()
+
+api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key)
+
+def get_response():
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=st.session_state.messages,
+    )
+
+    return response.choices[0].message
+
+# Duke University color palette
+DUKE_BLUE = "#00539B"  # Primary Duke Blue
+DUKE_NAVY = "#012169"  # Duke Navy Blue
+DUKE_WHITE = "#FFFFFF"
+DUKE_GRAY = "#666666"
+
+# Configure the page
+st.set_page_config(
+    page_title="Duke Student Advisor",
+    page_icon="🔵",
+    layout="wide",
+)
+
+# Apply Duke styling with CSS
+st.markdown(
+    f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap');
+
+    body, h1 {{
+        font-family: 'EB Garamond', serif !important;
+    }}
+
+    .main-title {{
+        font-size: 4rem;
+        font-weight: 100;
+        margin: 0;
+        text-align: center;
+        letter-spacing: 0.02em;
+    }}
+
+    .stTextInput > label, .stTextArea > label {{
+        color: {DUKE_WHITE};
+        font-weight: bold;
+    }}
+    .stButton > button {{
+        background-color: {DUKE_NAVY};
+        color: {DUKE_WHITE};
+        border-radius: 4px;
+        border: none;
+        padding: 0.5rem 1rem;
+    }}
+    .stButton > button {{
+        background-color: {DUKE_BLUE};
+    }}
+    .stSidebar {{
+        background-color: {DUKE_NAVY};
+        color: {DUKE_WHITE};
+    }}
+    .stSidebar [data-testid="stMarkdownContainer"] p {{
+        color: {DUKE_WHITE};
+    }}
+    .css-1d391kg {{
+        background-color: {DUKE_NAVY};
+    }}
+    .sidebar .sidebar-content {{
+        background-color: {DUKE_NAVY};
+    }}
+    .title-container {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        border-radius: 4px;
+        color: {DUKE_NAVY};
+    }}
+
+    .input-container {{
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 1rem 2rem;
+        background-color: #ffffff;
+        z-index: 100;
+    }}
+
+    .stChatInputContainer {{
+        margin-bottom: 80px;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# Initialize session state variables
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+
+# Title and header
+st.markdown("""
+    <div class="title-container" style="margin-top: -50px ;">
+        <h1 class="main-title">Duke Student Advisor</h1>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
+
+# Sidebar - Duke University logo and instructions
+with st.sidebar:
+    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Duke_Athletics_logo.svg/1200px-Duke_Athletics_logo.svg.png", width=120)
+    
+    st.markdown("### How to Use")
+    st.markdown("""Ask me anything about Duke University. I'm here to help you with your questions and concerns about academics, housing, dining, and more.
+                
+Enter your OpenAI API key below to get started.""")
+    
+    # OpenAI API key input
+    api_key = st.text_input("OpenAI API Key", type="password", help="Enter your OpenAI API key")
+    
+    # Clear chat button
+    if st.button("Clear Chat"):
+        st.session_state.messages = []
+        st.success("Chat history cleared!")
+
+# Display chat messages from session state
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# User input
+if user_input := st.chat_input("Enter your message here..."):
+    
+    st.session_state.messages.append({"role": "user", "content": user_input})
+
+    with st.chat_message("user"):
+        st.markdown(f"**User**: {user_input}")
+
+    # Agent response handling
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            response_messages = get_response()
+
+            message = dict(response_messages)
+
+            if message['role'] == 'assistant' and message['content']:
+                st.markdown(f"**{message['role']}**: {message['content']}")
+            st.session_state.messages.append(message)
