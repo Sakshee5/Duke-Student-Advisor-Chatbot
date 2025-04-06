@@ -1,52 +1,43 @@
 import requests
 from dotenv import load_dotenv
 import os
+from urllib.parse import quote
 
 load_dotenv()
 
 DUKE_API_KEY = os.getenv("DUKE_API_KEY")
-base_url = "https://streamer.oit.duke.edu/"
+base_url = "https://streamer.oit.duke.edu"
 
 def get_courses(subject):
-    """Function to get the courses for a given subject (has to be exact subject name)"""
-    
-    headers = {
-        "Authorization": f"Bearer {DUKE_API_KEY}"
-    }
+    """Function to get the courses for a given subject (must be exact subject name)"""
+    encoded_subject = quote(subject)
+    url = f"{base_url}/curriculum/courses/subject/{encoded_subject}?access_token={DUKE_API_KEY}"
+    response = requests.get(url)
 
-    response = requests.get(base_url + "/curriculum/courses/subject/" + subject)
-    return response.json()
+    if response.status_code != 200:
+        return {"error": response.status_code, "message": response.text}
 
-def get_course_details(crse_id, crse_offer_nbr):
-    """Function to get the course details for a given course id and course offer number"""   
-    response = requests.get(base_url + "/curriculum/courses/crse_id/" + crse_id + "/crse_offer_nbr/" + crse_offer_nbr)
-    return response.json()
+    courses = format_courses(response.json())
+    return courses
 
-def get_classes(strm, crse_id):
-    """Function to get the classes for a given stream and course id"""
-    response = requests.get(base_url + "/curriculum/classes/strm/" + strm + "/crse_id/" + crse_id)
-    return response.json()
 
-def get_class_details(strm, crse_id, crse_offer_nbr, session_code, class_section):
-    """Function to get the class details for a given stream, course id, course offer number, session code, and class section"""
-    response = requests.get(base_url + "/curriculum/classes/strm/" + strm + "/crse_id/" + crse_id + "/crse_offer_nbr/" + crse_offer_nbr + "/session_code/" + session_code + "/class_section/" + class_section)
-    return response.json()
-
-def get_list_of_values(fieldname):
-    """Function to get the list of values for a given field name"""
-    response = requests.get(base_url + "/curriculum/list_of_values/fieldname/" + fieldname)
-    return response.json()
-
-def get_synopsis(strm, subject, catalog_nbr, session_code, class_section):
-    """Function to get the synopsis for a given stream, subject, catalog number, session code, and class section"""
-    response = requests.get(base_url + "/curriculum/synopsis/strm/" + strm + "/subject/" + subject + "/catalog_nbr/" + catalog_nbr + "/session_code/" + session_code + "/class_section/" + class_section)
-    return response.json()
-
+def format_courses(course_data):
+    """Helper to format course info from the API response"""
+    try:
+        courses = course_data['ssr_get_courses_resp']['course_search_result']['subjects']['subject']['course_summaries']['course_summary']
+        formatted = []
+        for course in courses:
+            catalog_nbr = course.get('catalog_nbr', '').strip()
+            title = course.get('course_title_long', 'N/A')
+            term = course.get('ssr_crse_typoff_cd_lov_descr', 'N/A')
+            formatted.append(f"{catalog_nbr}: {title} ({term})")
+        return formatted
+    except KeyError:
+        return ["No courses found or unexpected response structure."]
 
 if __name__ == "__main__":
-    print(get_courses("AIPI - AI for Product Innovation"))
-
-
-
-
-                                                                                                             
+    courses = get_courses("AIPI - AI for Product Innovation")
+    
+    print("\nAIPI Courses at Duke:\n")
+    for course in courses:
+        print(course)
