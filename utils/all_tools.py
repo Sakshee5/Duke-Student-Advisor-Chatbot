@@ -2,6 +2,7 @@ from typing import List, Dict
 from tools.memDatabaseTool import search as mem_search
 from tools.prattDatabaseTool import search as pratt_search
 from tools.curriculumTool import get_courses, get_course_details, describe_course_by_title_or_code
+from tools.eventsTool import get_events
 
 TOOLS = [
     {
@@ -106,6 +107,23 @@ TOOLS = [
                 "required": ["subject", "query"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_events",
+            "description": "Get events from the Duke University Events API",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The query to search for events"
+                    }
+                },
+                "required": ["query"]
+            }
+        }
     }
 ]
 
@@ -116,6 +134,7 @@ def get_tool_function(tool_name: str):
         "pratt_search": pratt_search,
         "get_courses": get_courses,
         "get_course_details": get_course_details,
-        "describe_course_by_title_or_code": describe_course_by_title_or_code
+        "describe_course_by_title_or_code": describe_course_by_title_or_code,
+        "get_events": get_events
     }
     return tool_functions.get(tool_name) 
