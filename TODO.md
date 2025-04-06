@@ -1,0 +1,5 @@
+- Figure out what more tools to use
+- Optimize the current tools (For example, Sakshee needs to fix curriculum Tool)
+- Make UI more intuitive where you get messages from the system about what the agent is doing instead of just saying "Thinking.."
+- make the tool decsriptions better
+- clean up and refactor code better. for example, EventsTool has seperate openai call but it can just pull deom utils/openai

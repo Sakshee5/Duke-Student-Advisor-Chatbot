@@ -122,6 +122,76 @@ def fetch_filtered_events(groups=None, categories=None, future_days=1):
     except Exception as e:
         print(f"❌ Error fetching events: {e}")
 
+
+def fetch_filtered_events_data(groups=None, categories=None, future_days=1):
+    base_url = "https://calendar.duke.edu/events/index.json"
+
+    fixed_params = {
+        "future_days": future_days,
+        "local": "true",
+        "feed_type": "simple"
+    }
+
+    query_parts = [f"{key}={value}" for key, value in fixed_params.items()]
+
+    if groups and not ("all" in [g.lower() for g in groups]):
+        query_parts += [f"gfu[]={quote(g)}" for g in groups]
+    if categories and not ("all" in [c.lower() for c in categories]):
+        query_parts += [f"cfu[]={quote(c)}" for c in categories]
+
+    full_url = f"{base_url}?{'&'.join(query_parts)}"
+    print(f"\n🔍 Constructed URL: {full_url}\n")
+
+    try:
+        response = requests.get(full_url)
+        response.raise_for_status()
+        data = response.json()
+
+        events = data.get("events", [])
+        if not events:
+            return "⚠️ No events found for the selected filters."
+        
+        events_data = []
+        for event in events:
+            title = event.get("summary", "No Title")
+            description = event.get("description", "").strip()
+            start_ts = event.get("start_timestamp", "")
+            location = event.get("location", {}).get("address", "TBD")
+            link = event.get("link", "")
+
+            try:
+                start_dt = datetime.strptime(start_ts, "%Y-%m-%dT%H:%M:%SZ")
+                formatted_start = start_dt.strftime("%b %d, %Y %I:%M %p")
+            except:
+                formatted_start = start_ts
+
+            events_data.append({
+                "title": title,
+                "start_time": formatted_start,
+                "location": location,
+                "link": link,
+                "description": description[:150] if description else ""
+            })
+
+        return events_data
+
+    except Exception as e:
+        return f"❌ Error fetching events: {e}"
+
+def get_events(query):
+    filters = get_event_filters_with_gpt(query, groups_list, categories_list)
+
+    groups = filters.get("groups", [])
+    categories = filters.get("categories", [])
+    future_days = filters.get("future_days", 30)
+
+    return fetch_filtered_events_data(
+        groups=groups,
+        categories=categories,
+        future_days=future_days
+    )
+    
+
 if __name__ == "__main__":
     user_query = input("What kind of events are you looking for?\n> ")
     filters = get_event_filters_with_gpt(user_query, groups_list, categories_list)
