@@ -12,11 +12,12 @@ from pathlib import Path
 project_root = str(Path(__file__).parent.parent)
 sys.path.append(project_root)
 
-from utils.openai_utils import get_response
+from utils.openai_client import get_openai_client, get_chat_completion
 
 # Load API Key
 load_dotenv()
 pinecone_api_key = os.getenv("PINECONE_API_KEY")
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
 # Initialize Pinecone client
 pc = Pinecone(api_key=pinecone_api_key)
@@ -150,7 +151,8 @@ Question: {query}
 """}
     ]
 
-    response = get_response(messages, os.getenv("OPENAI_API_KEY"))
+    client = get_openai_client(openai_api_key)
+    response = get_chat_completion(client, messages)
     answer = response.content
     
     return answer

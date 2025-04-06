@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.openai_utils import get_response
+from utils.function_calling import get_response
 import os
 from dotenv import load_dotenv
 
@@ -111,7 +111,11 @@ with st.sidebar:
     st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Duke_Athletics_logo.svg/1200px-Duke_Athletics_logo.svg.png", width=120)
     
     st.markdown("### How to Use")
-    st.markdown("""Ask me anything about Duke University. I'm here to help you with your questions and concerns about academics, housing, dining, and more.
+    st.markdown("""Ask me anything about Duke University. I can help you with:
+
+- MEM (Master of Engineering Management) program information
+- Pratt School of Engineering programs
+- Course information and details
                 
 Enter your OpenAI API key below to get started.""")
     
@@ -146,13 +150,10 @@ if api_key:
         # Agent response handling
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                response_messages = get_response(st.session_state.messages, api_key)
-
-                message = dict(response_messages)
-
-                if message['role'] == 'assistant' and message['content']:
-                    st.markdown(f"**{message['role']}**: {message['content']}")
-                st.session_state.messages.append(message)
+                response = get_response(st.session_state.messages, api_key)
+                if response.content:
+                    st.markdown(response.content)
+                    st.session_state.messages.append({"role": "assistant", "content": response.content})
 
 else:
     st.error("Please enter your OpenAI API key here or add it to the .env file to continue.")
