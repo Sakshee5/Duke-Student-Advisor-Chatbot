@@ -2,17 +2,85 @@ import requests
 from dotenv import load_dotenv
 import os
 from urllib.parse import quote
+import json
+from difflib import SequenceMatcher
 
 load_dotenv()
 
 DUKE_API_KEY = os.getenv("DUKE_API_KEY")
 BASE_URL = "https://streamer.oit.duke.edu"
 
+def load_subjects():
+    """Load and parse the Duke subjects JSON file"""
+    try:
+        with open('data/curriculumData/duke_subjects.json', 'r') as f:
+            subjects_data = json.load(f)
+            return subjects_data
+
+    except Exception as e:
+        print(f"Error loading subjects: {e}")
+        return {}
+
+def find_best_match(query, subjects):
+    """
+    Find the best matching subject code and name for a given query.
+    Returns a tuple of (code, name) or None if no good match is found.
+    """
+    query = query.lower().strip()
+    best_score = 0
+    best_match = None
+    
+    if isinstance(subjects, dict):
+        for code, name in subjects.items():
+            # Create the full subject string in the format "CODE - NAME"
+            full_subject = code + " - " + name
+                
+            # Calculate similarity scores for different parts
+            code_score = SequenceMatcher(None, query, code.lower()).ratio()
+            name_score = SequenceMatcher(None, query, name.lower()).ratio()
+            full_score = SequenceMatcher(None, query, full_subject.lower()).ratio()
+            
+            # Use the best score among the three
+            score = max(code_score, name_score, full_score)
+            
+            if score > best_score:
+                best_score = score
+                best_match = (code, name)
+
+    elif isinstance(subjects, list):
+        for subject in subjects:
+            # Create the full subject string in the format "CODE - NAME"
+            full_subject = subject
+                
+            # Calculate similarity scores for different parts
+            score = SequenceMatcher(None, query, full_subject.lower()).ratio()
+   
+            if score > best_score:
+                best_score = score
+                best_match = subject
+
+    else:
+        return {"error": "Invalid subjects data structure."}
+    
+    # Only return a match if the similarity score is above a threshold
+    if best_score > 0.5:  # Adjust this threshold as needed
+        return best_match
+    return None
 
 def get_courses(subject):
     """A tool to get all courses for a given subject"""
     
-    encoded_subject = quote(subject)
+    # Load subjects and find the best match
+    subjects = load_subjects()
+    match = find_best_match(subject, subjects)
+    
+    if not match:
+        return {"error": f"No matching subject found for '{subject}'. Please provide a more specific subject name or code."}
+    
+    code, name = match
+    formatted_subject = f"{code} - {name}"
+    
+    encoded_subject = quote(formatted_subject)
     url = f"{BASE_URL}/curriculum/courses/subject/{encoded_subject}?access_token={DUKE_API_KEY}"
     response = requests.get(url)
 
@@ -36,7 +104,7 @@ def get_courses(subject):
         return {"error": "No courses found or unexpected response structure."}
 
 
-def get_course_details(crse_id, crse_offer_nbr):
+def get_course_details_helper(crse_id, crse_offer_nbr):
     """A tool to get detailed course info for a specific course using its ID and offering number"""
 
     url = f"{BASE_URL}/curriculum/courses/crse_id/{crse_id}/crse_offer_nbr/{crse_offer_nbr}?access_token={DUKE_API_KEY}"
@@ -65,38 +133,54 @@ def get_course_details(crse_id, crse_offer_nbr):
         return {"error": "Unexpected structure in course detail response."}
 
 
-def describe_course_by_title_or_code(subject, query):
+def get_course_details(subject, course_title=None, course_number=None):
     """
-    Search for a course by catalog number or title and return detailed info.
+    Search for course details by the subject it belongs to with the course title or course number.
+    Course can be AI, AIPI, or "Artificial Intelligence", "Eng Management" etc
+    Subject title can be "Sourcing Data", "Supply Chain Management" etc
+    Subject number can be 590, 710 etc
     """
+
     course_list = get_courses(subject)
     if isinstance(course_list, dict) and "error" in course_list:
         return course_list
 
-    # Search for matching course
-    match = None
-    for course in course_list:
-        if query.strip().lower() in course['catalog_nbr'].lower() or query.strip().lower() in course['title'].lower():
-            match = course
-            break
+    if course_title:
+        query = course_title
+        match = find_best_match(query, [course['title'] for course in course_list])
 
-    if not match:
-        return {"error": f"No course found for '{query}' in subject '{subject}'."}
+        for course in course_list:
+            if course['title'] == match:
+                course_details = course
+                break
 
-    return get_course_details(match['crse_id'], match['crse_offer_nbr'])
+        course_details = get_course_details_helper(course_details['crse_id'], course_details['crse_offer_nbr'])
+     
+        return course_details
+    
+    elif course_number:
+        query = course_number
+        match = find_best_match(query, [course['catalog_nbr'] for course in course_list])
 
+        # based on the catalog number match, get the course details
+        for course in course_list:
+            if course['catalog_nbr'] == match:
+                course_details = course
+                break
+
+        course_details = get_course_details_helper(course_details['crse_id'], course_details['crse_offer_nbr'])
+
+        return course_details
+
+    else:
+        return {"error": "No course title or number provided."}
 
 
 if __name__ == "__main__":
-    print("Summary of AIPI Courses:\n")
-    all_courses = get_courses("AIPI - AI for Product Innovation")
+ 
+    all_courses = get_courses("AI")
     for c in all_courses:
         print(f"{c['catalog_nbr']}: {c['title']} ({c['term']})")
 
-    print("\nDetailed Info for AIPI 590:\n")
-    details = describe_course_by_title_or_code("AIPI", "590")
-    if "error" in details:
-        print(details["error"])
-    else:
-        for key, value in details.items():
-            print(f"{key.capitalize()}: {value}")
+    course_details = get_course_details("AI", course_title="Sourcing Data", course_number="590")
+    print(course_details)

@@ -1,7 +1,7 @@
 from typing import List, Dict
 from tools.memDatabaseTool import search as mem_search
 from tools.prattDatabaseTool import search as pratt_search
-from tools.curriculumTool import get_courses, get_course_details, describe_course_by_title_or_code
+from tools.curriculumTool import get_courses, get_course_details
 from tools.eventsTool import get_events
 
 TOOLS = [
@@ -70,41 +70,27 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_course_details",
-            "description": "Get detailed information about a specific course at Duke University",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "crse_id": {
-                        "type": "string",
-                        "description": "The course ID"
-                    },
-                    "crse_offer_nbr": {
-                        "type": "string",
-                        "description": "The course offering number"
-                    }
-                },
-                "required": ["crse_id", "crse_offer_nbr"]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "describe_course_by_title_or_code",
-            "description": "Search for a course by its title or code and get detailed information",
+            "description": "Search for a course by subject and course title or course number",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "subject": {
                         "type": "string",
-                        "description": "The subject code or name"
+                        "description": "The subject name like 'Artificial Intelligence' or 'AI'"
                     },
-                    "query": {
+                    "course_title": {
                         "type": "string",
-                        "description": "The course code or title to search for"
+                        "description": "The course title to search for like 'Sourcing Data' or 'Supply Chain Management'",
+                        "default": None
+
+                    },
+                    "course_number": {
+                        "type": "string",
+                        "description": "The course number to search for like '590' or '710'",
+                        "default": None
                     }
                 },
-                "required": ["subject", "query"]
+                "required": ["subject"]
             }
         }
     },
@@ -134,7 +120,6 @@ def get_tool_function(tool_name: str):
         "pratt_search": pratt_search,
         "get_courses": get_courses,
         "get_course_details": get_course_details,
-        "describe_course_by_title_or_code": describe_course_by_title_or_code,
         "get_events": get_events
     }
     return tool_functions.get(tool_name) 
