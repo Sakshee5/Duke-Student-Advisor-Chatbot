@@ -1,13 +1,28 @@
-from utils.openai_client import get_openai_client, get_chat_completion
-from utils.all_tools import TOOLS, get_tool_function
 import json
+from utils.openai_client import get_chat_completion, get_openai_client
+from tools.memDatabaseTool import search as mem_search
+from tools.prattDatabaseTool import search as pratt_search
+from tools.curriculumTool import get_courses, get_course_details
+from tools.eventsTool import get_events
+from tools.tools_schema import TOOLS_SCHEMA
+
+def get_tool_function(tool_name: str):
+    """Get the actual function implementation for a tool name"""
+    tool_functions = {
+        "mem_search": mem_search,
+        "pratt_search": pratt_search,
+        "get_courses": get_courses,
+        "get_course_details": get_course_details,
+        "get_events": get_events
+    }
+    return tool_functions.get(tool_name) 
 
 def get_response(messages, api_key):
     client = get_openai_client(api_key)
     if not client:
         return None
         
-    response_message = get_chat_completion(client, messages, tools=TOOLS)
+    response_message = get_chat_completion(client, messages, tools=TOOLS_SCHEMA)
     
     # Check if the model wants to call a function
     if response_message.tool_calls:
@@ -43,6 +58,6 @@ def get_response(messages, api_key):
         })
         
         # Get a final response from the model
-        return get_chat_completion(client, messages, tools=TOOLS)
+        return get_chat_completion(client, messages, tools=TOOLS_SCHEMA)
     
     return response_message

@@ -1,10 +1,4 @@
-from typing import List, Dict
-from tools.memDatabaseTool import search as mem_search
-from tools.prattDatabaseTool import search as pratt_search
-from tools.curriculumTool import get_courses, get_course_details
-from tools.eventsTool import get_events
-
-TOOLS = [
+TOOLS_SCHEMA = [
     {
         "type": "function",
         "function": {
@@ -112,14 +106,3 @@ TOOLS = [
         }
     }
 ]
-
-def get_tool_function(tool_name: str):
-    """Get the actual function implementation for a tool name"""
-    tool_functions = {
-        "mem_search": mem_search,
-        "pratt_search": pratt_search,
-        "get_courses": get_courses,
-        "get_course_details": get_course_details,
-        "get_events": get_events
-    }
-    return tool_functions.get(tool_name) 
