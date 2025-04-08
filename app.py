@@ -94,7 +94,7 @@ st.markdown(
 
 # Initialize session state variables
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = [{"role": "system", "content": "You are a helpful assistant that can answer questions about Duke University."}]
 
 
 # Title and header
@@ -135,8 +135,9 @@ Enter your OpenAI API key below to get started.""")
 
 # Display chat messages from session state
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+    if message["role"] != "system":
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
 if api_key:
     # User input

@@ -57,7 +57,7 @@ def get_response(messages, api_key):
             "content": str(function_response)
         })
         
-        # Get a final response from the model
-        return get_chat_completion(client, messages, tools=TOOLS_SCHEMA)
+        # Recursively call get_response to handle potential additional tool calls
+        return get_response(messages, api_key)
     
     return response_message
