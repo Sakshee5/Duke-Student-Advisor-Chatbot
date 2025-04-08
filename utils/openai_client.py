@@ -16,7 +16,7 @@ def get_chat_completion(client, messages, tools=None, tool_choice="auto"):
         model="gpt-4o-mini",
         messages=messages,
         tools=tools,
-        tool_choice=tool_choice
+        tool_choice=tool_choice,
     )
     
     return response.choices[0].message 
