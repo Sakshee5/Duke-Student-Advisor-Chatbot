@@ -135,7 +135,7 @@ Enter your OpenAI API key below to get started.""")
 
 # Display chat messages from session state
 for message in st.session_state.messages:
-    if message["role"] != "system":
+    if message["role"] == "user" or message["role"] == "assistant":
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
@@ -150,11 +150,24 @@ if api_key:
 
         # Agent response handling
         with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                response = get_response(st.session_state.messages, api_key)
-                if response.content:
+            status_container = st.empty()
+            response_container = st.empty()
+            
+            status_container.info("Initializing...")
+            
+            response = None
+            for status in get_response(st.session_state.messages, api_key):
+                if isinstance(status, str):
+                    status_container.info(status)
+                else:
+                    response = status
+                    break
+            
+            if response and response.content:
+                status_container.empty()
+                with response_container.container():
                     st.markdown(response.content)
-                    st.session_state.messages.append({"role": "assistant", "content": response.content})
+                st.session_state.messages.append({"role": "assistant", "content": response.content})
 
 else:
     st.error("Please enter your OpenAI API key here or add it to the .env file to continue.")
