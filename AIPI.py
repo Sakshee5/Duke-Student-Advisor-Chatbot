@@ -5,7 +5,6 @@ from pinecone import Pinecone
 from openai import OpenAI
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 class PineconeRetriever:
@@ -128,7 +127,7 @@ class PineconeRetriever:
             "reconstructed_files": reconstructed_files
         }
 
-def main(query: str) -> str:
+def main(query: str) -> Dict[str, Any]:
     """
     Main function to be called by the LLM agent.
     
@@ -136,34 +135,49 @@ def main(query: str) -> str:
         query (str): User query
         
     Returns:
-        str: JSON string with reconstructed files
+        Dict: Dictionary with reconstructed files
     """
     try:
         retriever = PineconeRetriever()
         result = retriever.query_and_reconstruct(query)
-        return json.dumps(result, indent=2)
+        return result
     except Exception as e:
-        return json.dumps({
+        return {
             "error": str(e),
             "query": query,
             "reconstructed_files": []
-        }, indent=2)
+        }
 
-def test_with_chatgpt(query: str) -> None:
+def main_json(query: str) -> str:
+    """
+    Similar to main(), but returns a JSON string instead of a dictionary.
+    Useful when you need to return a JSON string directly.
+    
+    Args:
+        query (str): User query
+        
+    Returns:
+        str: JSON string with reconstructed files
+    """
+    result = main(query)
+    return json.dumps(result, indent=2)
+
+def test_with_chatgpt(query: str, context_data: Dict[str, Any] = None) -> None:
     """
     Test the retrieval tool with ChatGPT.
     
     Args:
         query (str): User query
+        context_data (Dict): Optional - Already retrieved context data
     """
-    # Get context from Pinecone
-    context_json = main(query)
-    context_data = json.loads(context_json)
+    # Get context from Pinecone if not provided
+    if context_data is None:
+        context_data = main(query)
     
     # Check if we have any reconstructed files
-    if not context_data.get("reconstructed_files"):
+    if "error" in context_data or not context_data.get("reconstructed_files"):
         print("No relevant documents found or there was an error:")
-        print(context_json)
+        print(json.dumps(context_data, indent=2))
         return
     
     # Extract reconstructed content to use as context
@@ -209,11 +223,13 @@ if __name__ == "__main__":
     
     print(f"Processing query: '{query}'")
     
-    # First, just get and show the raw retrieval results
-    print("\n=== Raw Retrieval Results ===")
-    result = main(query)
-    print(result)
+    # Get the retrieval results (once)
+    retrieval_results = main(query)
     
-    # Then, test with ChatGPT
+    # Show the raw retrieval results
+    print("\n=== Raw Retrieval Results ===")
+    print(json.dumps(retrieval_results, indent=2))
+    
+    # Then, test with ChatGPT using the already retrieved results
     print("\n=== Testing with ChatGPT ===")
-    test_with_chatgpt(query)
+    test_with_chatgpt(query, retrieval_results)
