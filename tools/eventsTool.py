@@ -146,6 +146,7 @@ def fetch_filtered_events(groups=None, categories=None, future_days=1, location_
         print(f"❌ Error fetching events: {e}")
 
 
+
 def fetch_filtered_events_data(categories=None, future_days=1, groups=None, location_keywords=None, target_date=None):
     base_url = "https://calendar.duke.edu/events/index.json"
 
@@ -228,6 +229,7 @@ def get_events(query):
     groups = filters.get("groups", [])
     categories = filters.get("categories", [])
     future_days = filters.get("future_days", 30)
+
     target_date = filters.get("target_date", None)
     location_keywords = filters.get("location_keywords", [])
 
@@ -238,7 +240,7 @@ def get_events(query):
         target_date=target_date,
         location_keywords=location_keywords
     )
-    
+  
 if __name__ == "__main__":
     user_query = input("What kind of events are you looking for?\n> ")
     filters = get_event_filters_with_gpt(user_query, groups_list, categories_list)

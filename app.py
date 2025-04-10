@@ -1,19 +1,9 @@
 import streamlit as st
-from dotenv import load_dotenv
-from openai import OpenAI
+from utils.function_calling import get_response
 import os
+from dotenv import load_dotenv
+
 load_dotenv()
-
-api_key = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=api_key)
-
-def get_response():
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=st.session_state.messages,
-    )
-
-    return response.choices[0].message
 
 # Duke University color palette
 DUKE_BLUE = "#00539B"  # Primary Duke Blue
@@ -104,7 +94,7 @@ st.markdown(
 
 # Initialize session state variables
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = [{"role": "system", "content": "You are a helpful assistant that can answer questions about Duke University."}]
 
 
 # Title and header
@@ -121,12 +111,22 @@ with st.sidebar:
     st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Duke_Athletics_logo.svg/1200px-Duke_Athletics_logo.svg.png", width=120)
     
     st.markdown("### How to Use")
-    st.markdown("""Ask me anything about Duke University. I'm here to help you with your questions and concerns about academics, housing, dining, and more.
+    st.markdown("""Ask me anything about Duke University. I can help you with:
+
+- MEM (Master of Engineering Management) program information
+- Pratt School of Engineering programs
+- Course information and details
                 
 Enter your OpenAI API key below to get started.""")
     
     # OpenAI API key input
     api_key = st.text_input("OpenAI API Key", type="password", help="Enter your OpenAI API key")
+
+    if not api_key:
+        try:
+            api_key = os.getenv("OPENAI_API_KEY")
+        except:
+            st.warning("Please enter your OpenAI API key here or add it to the .env file to continue.")
     
     # Clear chat button
     if st.button("Clear Chat"):
@@ -135,24 +135,39 @@ Enter your OpenAI API key below to get started.""")
 
 # Display chat messages from session state
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+    if message["role"] == "user" or message["role"] == "assistant":
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-# User input
-if user_input := st.chat_input("Enter your message here..."):
-    
-    st.session_state.messages.append({"role": "user", "content": user_input})
+if api_key:
+    # User input
+    if user_input := st.chat_input("Enter your message here..."):
+        
+        st.session_state.messages.append({"role": "user", "content": user_input})
 
-    with st.chat_message("user"):
-        st.markdown(f"**User**: {user_input}")
+        with st.chat_message("user"):
+            st.markdown(f"**User**: {user_input}")
 
-    # Agent response handling
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            response_messages = get_response()
+        # Agent response handling
+        with st.chat_message("assistant"):
+            status_container = st.empty()
+            response_container = st.empty()
+            
+            status_container.info("Initializing...")
+            
+            response = None
+            for status in get_response(st.session_state.messages, api_key):
+                if isinstance(status, str):
+                    status_container.info(status)
+                else:
+                    response = status
+                    break
+            
+            if response and response.content:
+                status_container.empty()
+                with response_container.container():
+                    st.markdown(response.content)
+                st.session_state.messages.append({"role": "assistant", "content": response.content})
 
-            message = dict(response_messages)
-
-            if message['role'] == 'assistant' and message['content']:
-                st.markdown(f"**{message['role']}**: {message['content']}")
-            st.session_state.messages.append(message)
+else:
+    st.error("Please enter your OpenAI API key here or add it to the .env file to continue.")
