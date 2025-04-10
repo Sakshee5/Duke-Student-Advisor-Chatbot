@@ -41,8 +41,8 @@ def get_response(messages, api_key, first_call=True):
         # Get the function implementation
         function_to_call = get_tool_function(function_name)
         
-        # Call the function
-        function_response = function_to_call(**function_args)
+        # Add the API key to the function call
+        function_response = function_to_call(**function_args, api_key=api_key)
 
         # Add the function response to the messages
         messages.append({

@@ -12,7 +12,7 @@ from pathlib import Path
 project_root = str(Path(__file__).parent.parent)
 sys.path.append(project_root)
 
-from utils.openai_client import get_openai_client, get_chat_completion
+from utils.openai_client import get_openai_client, get_chat_completion, get_embeddings_model
 
 # Load API Key
 load_dotenv()
@@ -26,8 +26,6 @@ INDEX_NAME = "pratt-database"
 DIMENSION = 1536
 METRIC = "cosine"
 BATCH_SIZE = 100
-
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
 def initialize_pinecone_index():
     """
@@ -72,10 +70,18 @@ def upsert_vectors(index, vectors, namespace="nutrition-text"):
     print(f"Successfully upserted {len(vectors)} vectors into Pinecone!")
 
 
-def process_pdf(pdf_path: str, namespace: str) -> None:
+def process_pdf(pdf_path: str, namespace: str, api_key=None) -> None:
     """
     Process a PDF file, extract text page by page, create embeddings and store in Pinecone
     """
+    if not api_key:
+        return "Error: No API key provided for Pratt PDF processing"
+    
+    # Create embeddings with user's API key
+    embeddings = get_embeddings_model(api_key)
+    if not embeddings:
+        return "Error: Could not initialize embeddings model for Pratt PDF processing"
+    
     # Extract text from PDF page by page
     pages = _extract_text_from_pdf(pdf_path)
     
@@ -124,10 +130,17 @@ def delete_all_records(namespace: str = "pratt-handbook"):
 
 
 
-def search(query: str, top_k: int = 3, namespace: str = "pratt-handbook") -> List[Dict]:
+def search(query: str, top_k: int = 3, namespace: str = "pratt-handbook", api_key=None) -> List[Dict]:
     """
     Search Pratt related content in the vector database
     """
+    if not api_key:
+        return "Error: No API key provided for Pratt Search"
+    
+    # Create embeddings with user's API key
+    embeddings = get_embeddings_model(api_key)
+    if not embeddings:
+        return "Error: Could not initialize embeddings model for Pratt Search"
     # Create embedding for the query
     query_embedding = embeddings.embed_query(query)
     
@@ -153,6 +166,8 @@ Question: {query}
 
     client = get_openai_client(openai_api_key)
     response = get_chat_completion(client, messages)
+    if response is None:
+        return "❌ Failed to get a valid response from OpenAI."
     answer = response.content
     
     return answer
