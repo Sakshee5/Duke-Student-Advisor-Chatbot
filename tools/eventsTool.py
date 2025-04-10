@@ -6,13 +6,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 import re
-
-# Load environment variables
-load_dotenv()
-
-# Setup OpenAI client
-api_key = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=api_key)
+from utils.openai_client import get_chat_completion, get_openai_client
 
 # Load groups and categories from the correct relative paths
 GROUPS_FILE = "data/eventsData/groups.txt"
@@ -25,7 +19,19 @@ with open(GROUPS_FILE, "r") as f:
 with open(CATEGORIES_FILE, "r") as f:
     categories_list = [line.strip() for line in f if line.strip()]
 
-def get_event_filters_with_gpt(user_prompt, groups, categories):
+def get_event_filters_with_gpt(user_prompt, groups=['All'], categories=['All'], api_key=None):
+    client = get_openai_client(api_key)
+
+    if not client:
+        return {
+            "error": "No valid API key provided",
+            "future_days": 30,
+            "groups": [],
+            "categories": [],
+            "target_date": None,
+            "location_keywords": []
+        }
+    
     system_prompt = (
         "The year is 2025. You are an assistant that extracts event filters for an event calendar API. "
         "Given a user query and lists of valid 'groups' and 'categories', extract:\n"
@@ -56,17 +62,23 @@ Available categories:
 """}
     ]
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages,
-        temperature=0
-    )
+    response = get_chat_completion(client, messages)
 
-    content = response.choices[0].message.content.strip()
+    content = response.content.strip()
     if content.startswith("```"):
         content = re.sub(r"```json|```", "", content).strip()
 
-    return json.loads(content)
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError:
+        # Fallback in case parsing fails
+        return {
+            "future_days": 30,
+            "groups": [],
+            "categories": [],
+            "target_date": None,
+            "location_keywords": []
+        }
 
 def fetch_filtered_events(groups=None, categories=None, future_days=1, location_keywords=None, target_date=None):
     base_url = "https://calendar.duke.edu/events/index.json"
@@ -223,8 +235,8 @@ def fetch_filtered_events_data(categories=None, future_days=1, groups=None, loca
     except Exception as e:
         return f"❌ Error fetching events: {e}"
 
-def get_events(query):
-    filters = get_event_filters_with_gpt(query, groups_list, categories_list)
+def get_events(query, api_key=None):
+    filters = get_event_filters_with_gpt(query, groups_list, categories_list, api_key)
 
     groups = filters.get("groups", [])
     categories = filters.get("categories", [])
@@ -242,8 +254,9 @@ def get_events(query):
     )
   
 if __name__ == "__main__":
+    api_key = input("Please enter your OpenAI API Key: ")
     user_query = input("What kind of events are you looking for?\n> ")
-    filters = get_event_filters_with_gpt(user_query, groups_list, categories_list)
+    filters = get_event_filters_with_gpt(user_query, groups_list, categories_list, api_key)
 
     print("\n🧠 GPT-Extracted Filters:")
     print(json.dumps(filters, indent=2))

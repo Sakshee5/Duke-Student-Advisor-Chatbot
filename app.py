@@ -116,17 +116,17 @@ with st.sidebar:
 - MEM (Master of Engineering Management) program information
 - Pratt School of Engineering programs
 - Course information and details
-                
-Enter your OpenAI API key below to get started.""")
+                """)
     
-    # OpenAI API key input
-    api_key = st.text_input("OpenAI API Key", type="password", help="Enter your OpenAI API key")
+    api_key = os.getenv("OPENAI_API_KEY")
 
     if not api_key:
-        try:
-            api_key = os.getenv("OPENAI_API_KEY")
-        except:
-            st.warning("Please enter your OpenAI API key here or add it to the .env file to continue.")
+        st.markdown("Enter your OpenAI API key below to get started.")
+        # Ask user to input API key only if it's not found in env
+        api_key = st.text_input("OpenAI API Key", type="password", help="Enter your OpenAI API key")
+
+    if not api_key:
+        st.warning("Please enter your OpenAI API key here or add it to the .env file to continue.")
     
     # Clear chat button
     if st.button("Clear Chat"):
