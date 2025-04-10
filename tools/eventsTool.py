@@ -27,17 +27,21 @@ with open(CATEGORIES_FILE, "r") as f:
 
 def get_event_filters_with_gpt(user_prompt, groups, categories):
     system_prompt = (
-        "You are an assistant that extracts event filters for an event calendar API. "
+        "The year is 2025. You are an assistant that extracts event filters for an event calendar API. "
         "Given a user query and lists of valid 'groups' and 'categories', extract:\n"
         "- the number of future days (default to 30 if not mentioned)\n"
         "- matching group names from the list\n"
-        "- matching category names from the list\n\n"
+        "- matching category names from the list\n"
+        "- the specific date (if mentioned, e.g., 'April 18') as YYYY-MM-DD format\n"
+        "- location keywords (e.g., 'downtown', 'west campus', 'chapel')\n\n"
         "Respond in JSON format as:\n"
         "{\n"
-        '  "future_days": <int>,\n'
-        '  "groups": [<list of strings>],\n'
-        '  "categories": [<list of strings>]\n'
-        "}"
+        ' "future_days": <int>,\n'
+        ' "groups": [<list of strings>],\n'
+        ' "categories": [<list of strings>],\n'
+        ' "target_date": "<optional date in YYYY-MM-DD>",\n'
+        ' "location_keywords": [<list of location strings>]\n'
+        '}'
     )
 
     messages = [
@@ -64,7 +68,7 @@ Available categories:
 
     return json.loads(content)
 
-def fetch_filtered_events(groups=None, categories=None, future_days=1):
+def fetch_filtered_events(groups=None, categories=None, future_days=1, location_keywords=None, target_date=None):
     base_url = "https://calendar.duke.edu/events/index.json"
 
     fixed_params = {
@@ -73,6 +77,11 @@ def fetch_filtered_events(groups=None, categories=None, future_days=1):
         "feed_type": "simple"
     }
 
+    if isinstance(groups, str):
+        groups = [groups]
+    if isinstance(categories, str):
+        categories = [categories]
+        
     query_parts = [f"{key}={value}" for key, value in fixed_params.items()]
 
     if groups and not ("all" in [g.lower() for g in groups]):
@@ -111,6 +120,20 @@ def fetch_filtered_events(groups=None, categories=None, future_days=1):
                 except:
                     formatted_start = start_ts
 
+                if target_date:
+                    try:
+                        filter_date = datetime.strptime(target_date, "%Y-%m-%d").date()
+                        if not start_dt or start_dt.date() != filter_date:
+                            continue  # Skip if not the target date
+                    except:
+                        pass
+                
+                # Skip if location doesn't match (if location keywords are provided)
+                if location_keywords and location:
+                    location_lower = location.lower()
+                if not any(keyword.lower() in location_lower for keyword in location_keywords):
+                    continue
+
                 file.write(f"🔹 {title}\n")
                 file.write(f"   🕒 {formatted_start}\n")
                 file.write(f"   📍 {location}\n")
@@ -123,7 +146,8 @@ def fetch_filtered_events(groups=None, categories=None, future_days=1):
         print(f"❌ Error fetching events: {e}")
 
 
-def fetch_filtered_events_data(groups=None, categories=None, future_days=1):
+
+def fetch_filtered_events_data(categories=None, future_days=1, groups=None, location_keywords=None, target_date=None):
     base_url = "https://calendar.duke.edu/events/index.json"
 
     fixed_params = {
@@ -131,6 +155,12 @@ def fetch_filtered_events_data(groups=None, categories=None, future_days=1):
         "local": "true",
         "feed_type": "simple"
     }
+
+    # Defensive fix
+    if isinstance(groups, str):
+        groups = [groups]
+    if isinstance(categories, str):
+        categories = [categories]
 
     query_parts = [f"{key}={value}" for key, value in fixed_params.items()]
 
@@ -165,6 +195,21 @@ def fetch_filtered_events_data(groups=None, categories=None, future_days=1):
             except:
                 formatted_start = start_ts
 
+            # Filter by exact date (if provided)
+            if target_date:
+                try:
+                    filter_date = datetime.strptime(target_date, "%Y-%m-%d").date()
+                    if not start_dt or start_dt.date() != filter_date:
+                        continue  # Skip if not the target date
+                except:
+                    pass
+
+            # Skip if location doesn't match (if location keywords are provided)
+            if location_keywords and location:
+                location_lower = location.lower()
+                if not any(keyword.lower() in location_lower for keyword in location_keywords):
+                    continue
+
             events_data.append({
                 "title": title,
                 "start_time": formatted_start,
@@ -185,13 +230,17 @@ def get_events(query):
     categories = filters.get("categories", [])
     future_days = filters.get("future_days", 30)
 
+    target_date = filters.get("target_date", None)
+    location_keywords = filters.get("location_keywords", [])
+
     return fetch_filtered_events_data(
         groups=groups,
         categories=categories,
-        future_days=future_days
+        future_days=future_days,
+        target_date=target_date,
+        location_keywords=location_keywords
     )
-    
-
+  
 if __name__ == "__main__":
     user_query = input("What kind of events are you looking for?\n> ")
     filters = get_event_filters_with_gpt(user_query, groups_list, categories_list)
@@ -202,9 +251,13 @@ if __name__ == "__main__":
     groups = filters.get("groups", [])
     categories = filters.get("categories", [])
     future_days = filters.get("future_days", 30)
+    target_date = filters.get("target_date")
+    location_keywords = filters.get("location_keywords", [])
 
     fetch_filtered_events(
         groups=groups,
         categories=categories,
-        future_days=future_days
+        future_days=future_days,
+        target_date=target_date,
+        location_keywords=location_keywords
     )
