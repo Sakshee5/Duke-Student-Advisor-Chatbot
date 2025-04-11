@@ -104,5 +104,22 @@ TOOLS_SCHEMA = [
                 "required": ["query"]
             }
         }
-    }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_professor_info",
+            "description": "Get rating information about a professor at Duke University",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "professor_query": {
+                        "type": "string",
+                        "description": "The professor name to search for (e.g., 'Eric Fouh', 'Smith Computer Science')"
+                    }
+                },
+                "required": ["professor_query"]
+            }
+        }
+    },
 ]
