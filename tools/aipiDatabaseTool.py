@@ -127,7 +127,7 @@ class PineconeRetriever:
             "reconstructed_files": reconstructed_files
         }
 
-def get_AIPI_details(query: str) -> Dict[str, Any]:
+def get_AIPI_details(query: str, api_key=None) -> Dict[str, Any]:
     """
     Main function to be called by the LLM agent.
     
