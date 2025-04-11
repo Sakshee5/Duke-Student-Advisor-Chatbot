@@ -104,5 +104,23 @@ TOOLS_SCHEMA = [
                 "required": ["query"]
             }
         }
+    },
+
+    {
+        "type": "function",
+        "function": {
+            "name": "get_AIPI_details",
+            "description": "This function / tool gets details about the Artificial Intelligence for Product Innovation Program also called AIPI use this for any queries regarding the program or for any information about professors if the progrgam is mentioned",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The query to search for information about the AIPI or the Artificial Intelligence for Product Innovation Program"
+                    }
+                },
+                "required": ["query"]
+            }
+        }
     }
 ]

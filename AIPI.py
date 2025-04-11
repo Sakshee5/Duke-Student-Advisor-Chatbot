@@ -140,7 +140,11 @@ def main(query: str) -> Dict[str, Any]:
     try:
         retriever = PineconeRetriever()
         result = retriever.query_and_reconstruct(query)
-        return result
+        
+        print("\n=== Testing with ChatGPT ===")
+        chatgptSummary = test_with_chatgpt(query, result)
+
+        return chatgptSummary
     except Exception as e:
         return {
             "error": str(e),
@@ -208,8 +212,9 @@ Answer:"""
         for i, file in enumerate(context_data["reconstructed_files"], 1):
             print(f"{i}. {file['source_file']} (relevance: {file['relevance_score']:.3f})")
         
-        print("\n=== ChatGPT Response ===")
-        print(response.choices[0].message.content)
+        # print("\n=== ChatGPT Response ===")
+        # print(response.choices[0].message.content)
+        return response.choices[0].message.content
         
     except Exception as e:
         print(f"Error calling ChatGPT: {str(e)}")
@@ -226,10 +231,14 @@ if __name__ == "__main__":
     # Get the retrieval results (once)
     retrieval_results = main(query)
     
-    # Show the raw retrieval results
-    print("\n=== Raw Retrieval Results ===")
-    print(json.dumps(retrieval_results, indent=2))
+    # # Show the raw retrieval results
+    # print("\n=== Raw Retrieval Results ===")
+    # print(json.dumps(retrieval_results, indent=2))
     
-    # Then, test with ChatGPT using the already retrieved results
-    print("\n=== Testing with ChatGPT ===")
-    test_with_chatgpt(query, retrieval_results)
+    # # Then, test with ChatGPT using the already retrieved results
+    # print("\n=== Testing with ChatGPT ===")
+    # test_with_chatgpt(query, retrieval_results)
+    
+    print("\n\n\n\n\n")
+    print("=== ChatGPT Results===")
+    print(retrieval_results)
