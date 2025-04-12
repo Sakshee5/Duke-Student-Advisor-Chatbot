@@ -127,7 +127,7 @@ TOOLS_SCHEMA = [
         "type": "function",
         "function": {
             "name": "get_AIPI_details",
-            "description": "This function / tool gets details about the Artificial Intelligence for Product Innovation Program also called !!! AIPI !!! use this for any queries regarding the program or for any information about professors if the progrgam is mentioned. When the query reltes to a Professor from the AIPI program this is the best tool to use",
+            "description": "This function / tool gets details about the Artificial Intelligence for Product Innovation Program also called !!! AIPI !!! use this for any queries regarding the program or for any information about professors if the program is mentioned. When the query relates to a Professor from the AIPI program this is the best tool to use",
             "parameters": {
                 "type": "object",
                 "properties": {

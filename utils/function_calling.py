@@ -19,9 +19,7 @@ def get_tool_function(tool_name: str):
         "get_courses": get_courses,
         "get_course_details": get_course_details,
         "get_events": get_events,
-
         "get_professor_info": get_professor_info,
-
         "get_AIPI_details": get_AIPI_details
 
     }

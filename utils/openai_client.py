@@ -13,10 +13,20 @@ def get_chat_completion(client, messages, tools=None, tool_choice="auto"):
     if not client:
         return None
 
+    # Prepare messages with system prompt if provided
+    all_messages = []
+    
+    # Add system message if provided
+    system_prompt = "You are a helpful assistant for Duke University, you answer questions about the university and partocular programs based on the user's request. Give out long and elaborate answers whenever possible. You have a few tools provided to you for usage, you them based on each question."
+    all_messages.append({"role": "system", "content": system_prompt})
+    
+    # Add the rest of the messages
+    all_messages.extend(messages)
+
     # Build request kwargs conditionally
     kwargs = {
         "model": "gpt-4o-mini",
-        "messages": messages,
+        "messages": all_messages,
     }
 
     if tools:
@@ -29,7 +39,6 @@ def get_chat_completion(client, messages, tools=None, tool_choice="auto"):
     except Exception as e:
         print(f"❌ OpenAI API call failed: {e}")
         return None
-
 def get_embeddings_model(api_key=None):
     """
     Creates and returns an OpenAIEmbeddings object using the provided API key

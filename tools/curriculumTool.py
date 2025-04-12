@@ -67,7 +67,7 @@ def find_best_match(query, subjects):
         return best_match
     return None
 
-def get_courses(subject):
+def get_courses(subject, api_key = None):
     """A tool to get all courses for a given subject"""
     
     # Load subjects and find the best match
