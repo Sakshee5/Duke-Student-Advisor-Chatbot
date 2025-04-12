@@ -1,5 +1,5 @@
 import json
-from utils.openai_client import get_chat_completion, get_openai_client
+from utils.openai_client import get_chat_completion
 from tools.memDatabaseTool import search as mem_search
 from tools.prattDatabaseTool import search as pratt_search
 from tools.curriculumTool import get_courses, get_course_details
@@ -19,17 +19,23 @@ def get_tool_function(tool_name: str):
     }
     return tool_functions.get(tool_name) 
 
-def get_response(messages, api_key, first_call=True):
-    client = get_openai_client(api_key)
-    if not client:
-        yield "Error: Could not initialize OpenAI client"
-        return None
+
+tool_status_messages = {
+    "mem_search": "Searching MEM database...",
+    "pratt_search": "Searching Pratt database...",
+    "get_courses": "Getting courses...",
+    "get_course_details": "Getting course details...",
+    "get_events": "Getting events...",
+    "get_professor_info": "Getting professor info...",
+}
+
+def get_response(messages, first_call=True):
     
     if first_call:
-        yield "Analyzing your question..."
+        yield "Analyzing question..."
     else:
         yield "Analyzing whether another tool call is needed..."
-    response_message = get_chat_completion(client, messages, tools=TOOLS_SCHEMA)
+    response_message = get_chat_completion(messages, tools=TOOLS_SCHEMA)
     
     # Check if the model wants to call a function
     if response_message.tool_calls:
@@ -38,13 +44,13 @@ def get_response(messages, api_key, first_call=True):
         function_name = tool_call.function.name
         function_args = json.loads(tool_call.function.arguments)
         
-        yield f"Executing Tool: {function_name}..."
+        yield f"{tool_status_messages[function_name]}..."
         
         # Get the function implementation
         function_to_call = get_tool_function(function_name)
         
         # Add the API key to the function call
-        function_response = function_to_call(**function_args, api_key=api_key)
+        function_response = function_to_call(**function_args)
 
         # Add the function response to the messages
         messages.append({
@@ -68,7 +74,7 @@ def get_response(messages, api_key, first_call=True):
         
         yield "Tool Call Completed. Processing the results..."
         
-        for status in get_response(messages, api_key, first_call=False):
+        for status in get_response(messages, first_call=False):
             yield status
 
         return

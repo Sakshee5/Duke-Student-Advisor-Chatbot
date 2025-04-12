@@ -11,11 +11,6 @@ TOOLS_SCHEMA = [
                         "type": "string",
                         "description": "The search query about MEM program"
                     },
-                    "top_k": {
-                        "type": "integer",
-                        "description": "Number of results to return",
-                        "default": 3
-                    }
                 },
                 "required": ["query"]
             }
@@ -33,11 +28,6 @@ TOOLS_SCHEMA = [
                         "type": "string",
                         "description": "The search query about Pratt programs"
                     },
-                    "top_k": {
-                        "type": "integer",
-                        "description": "Number of results to return",
-                        "default": 3
-                    }
                 },
                 "required": ["query"]
             }
