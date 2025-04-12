@@ -105,12 +105,29 @@ TOOLS_SCHEMA = [
             }
         }
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_professor_info",
+            "description": "Get rating information about a professor at Duke University use this tool for any professor despite the program",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "professor_query": {
+                        "type": "string",
+                        "description": "The professor name to search for (e.g., 'Eric Fouh', 'Smith Computer Science')"
+                    }
+                },
+                "required": ["professor_query"]
+            }
+        }
+    },
 
     {
         "type": "function",
         "function": {
             "name": "get_AIPI_details",
-            "description": "This function / tool gets details about the Artificial Intelligence for Product Innovation Program also called AIPI use this for any queries regarding the program or for any information about professors if the progrgam is mentioned",
+            "description": "This function / tool gets details about the Artificial Intelligence for Product Innovation Program also called !!! AIPI !!! use this for any queries regarding the program or for any information about professors if the progrgam is mentioned. When the query reltes to a Professor from the AIPI program this is the best tool to use",
             "parameters": {
                 "type": "object",
                 "properties": {
