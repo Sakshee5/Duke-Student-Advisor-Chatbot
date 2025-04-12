@@ -133,7 +133,7 @@ def get_course_details_helper(crse_id, crse_offer_nbr):
         return {"error": "Unexpected structure in course detail response."}
 
 
-def get_course_details(subject, course_title=None, course_number=None):
+def get_course_details(subject, course_title=None, course_number=None, api_key = None):
     """
     Search for course details by the subject it belongs to with the course title or course number.
     Course can be AI, AIPI, or "Artificial Intelligence", "Eng Management" etc

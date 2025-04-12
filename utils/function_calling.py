@@ -4,7 +4,11 @@ from tools.memDatabaseTool import search as mem_search
 from tools.prattDatabaseTool import search as pratt_search
 from tools.curriculumTool import get_courses, get_course_details
 from tools.eventsTool import get_events
+
 from tools.professorsTool import get_professor_info
+
+from tools.aipiDatabaseTool import get_AIPI_details
+
 from tools.tools_schema import TOOLS_SCHEMA
 
 def get_tool_function(tool_name: str):
@@ -15,7 +19,11 @@ def get_tool_function(tool_name: str):
         "get_courses": get_courses,
         "get_course_details": get_course_details,
         "get_events": get_events,
+
         "get_professor_info": get_professor_info,
+
+        "get_AIPI_details": get_AIPI_details
+
     }
     return tool_functions.get(tool_name) 
 
