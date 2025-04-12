@@ -19,9 +19,7 @@ def get_tool_function(tool_name: str):
         "get_courses": get_courses,
         "get_course_details": get_course_details,
         "get_events": get_events,
-
         "get_professor_info": get_professor_info,
-
         "get_AIPI_details": get_AIPI_details
 
     }
@@ -35,6 +33,7 @@ tool_status_messages = {
     "get_course_details": "Getting course details...",
     "get_events": "Getting events...",
     "get_professor_info": "Getting professor info...",
+    "get_AIPI_details": "Searching AIPI database..."
 }
 
 def get_response(messages, first_call=True):

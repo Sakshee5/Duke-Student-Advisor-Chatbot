@@ -46,22 +46,18 @@ st.markdown(
         font-weight: bold;
     }}
     .stButton > button {{
-        background-color: {DUKE_NAVY};
+        background-color: {DUKE_BLUE};
         color: {DUKE_WHITE};
         border-radius: 4px;
         border: none;
         padding: 0.5rem 1rem;
     }}
-    .stButton > button {{
-        background-color: {DUKE_BLUE};
-    }}
+
     .stSidebar {{
         background-color: {DUKE_NAVY};
         color: {DUKE_WHITE};
     }}
-    .stSidebar [data-testid="stMarkdownContainer"] p {{
-        color: {DUKE_WHITE};
-    }}
+   
     .css-1d391kg {{
         background-color: {DUKE_NAVY};
     }}
@@ -118,7 +114,7 @@ with st.sidebar:
 - Course information and details
                 """)
     
-    openai_api_key = st.text_input("OpenAI API Key", type="password", help="Enter your OpenAI API key")
+    st_openai_api_key = st.text_input("OpenAI API Key", type="password", help="Enter your OpenAI API key")
 
     # Clear chat button
     if st.button("Clear Chat"):
@@ -130,17 +126,13 @@ if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "system", "content": "You are a helpful assistant that can answer questions about Duke University."}]
 
 
-if "api_key" not in st.session_state:
-    if openai_api_key:
-        st.session_state.api_key = openai_api_key
-    else:
-        st.session_state.api_key = None
-       
-if "client" not in st.session_state:
-    if st.session_state.api_key:
-        st.session_state.client = get_openai_client(st.session_state.api_key)
-    else:
-        st.session_state.client = None
+if openai_api_key or st_openai_api_key:
+    st.session_state.api_key = openai_api_key or st_openai_api_key
+    st.session_state.client = get_openai_client(st.session_state.api_key)
+else:
+    st.session_state.api_key = None
+    st.session_state.client = None
+
 
 # Display chat messages from session state
 for message in st.session_state.messages:

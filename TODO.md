@@ -1,4 +1,4 @@
 - Figure out what more tools to use. Refer dataset: https://huggingface.co/datasets/cindy990915/duke-chat-rag/viewer/default/train?p=1
 - make the tool descriptions better
-- prettify the UI as much as possible. Add better "logging" messages as to what the system is currently doing.
-- clean up and refactor code better. for example, EventsTool has seperate openai call but it can just pull deom utils/openai
+- prettify the UI as much as possible.
+- added pinecone utils. mem and pratt are using them, maybe aipi database can use it too
