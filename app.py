@@ -121,9 +121,10 @@ with st.sidebar:
         st.session_state.messages = []
         st.success("Chat history cleared!")
 
+system_prompt = "You are a helpful assistant for Duke University, you answer questions about the university and particular programs based on the user's request. Give out long and elaborate answers whenever possible. You have a few tools provided to you for usage, use them based on each question."
 # Initialize session state variables
 if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "system", "content": "You are a helpful assistant that can answer questions about Duke University."}]
+    st.session_state.messages = [{"role": "system", "content": system_prompt}]
 
 
 if openai_api_key or st_openai_api_key:
