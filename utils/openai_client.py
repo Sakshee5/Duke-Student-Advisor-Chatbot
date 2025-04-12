@@ -15,6 +15,7 @@ def get_chat_completion(messages, tools=None, tool_choice="auto"):
     kwargs = {
         "model": "gpt-4o-mini",
         "messages": messages,
+        "temperature": 0.1
     }
 
     if tools:

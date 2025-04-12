@@ -1,4 +1,0 @@
-- Figure out what more tools to use. Refer dataset: https://huggingface.co/datasets/cindy990915/duke-chat-rag/viewer/default/train?p=1
-- make the tool descriptions better
-- prettify the UI as much as possible.
-- added pinecone utils. mem and pratt are using them, maybe aipi database can use it too
