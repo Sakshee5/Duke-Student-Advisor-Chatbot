@@ -37,7 +37,7 @@ TOOLS_SCHEMA = [
         "type": "function",
         "function": {
             "name": "get_courses",
-            "description": "Get a list of courses for a specific subject or department at Duke University. Useful when a user asks about course offerings in a subject (e.g., 'What courses are offered in ECE?').",
+            "description": "Get a list of courses for a specific subject or department at Duke University. Useful when a user asks about course offerings in a subject (e.g., 'What courses are offered in ECE?'). !!! When asked about the AIPI curriculum make sure to use this tool in your planning !!!",
             "parameters": {
                 "type": "object",
                 "properties": {
