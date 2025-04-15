@@ -2,8 +2,13 @@ import streamlit as st
 from utils.function_calling import get_response
 import os
 from dotenv import load_dotenv
+from utils.openai_client import get_openai_client
 
 load_dotenv()
+try:
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+except:
+    openai_api_key = None
 
 # Duke University color palette
 DUKE_BLUE = "#00539B"  # Primary Duke Blue
@@ -41,22 +46,18 @@ st.markdown(
         font-weight: bold;
     }}
     .stButton > button {{
-        background-color: {DUKE_NAVY};
+        background-color: {DUKE_BLUE};
         color: {DUKE_WHITE};
         border-radius: 4px;
         border: none;
         padding: 0.5rem 1rem;
     }}
-    .stButton > button {{
-        background-color: {DUKE_BLUE};
-    }}
+
     .stSidebar {{
         background-color: {DUKE_NAVY};
         color: {DUKE_WHITE};
     }}
-    .stSidebar [data-testid="stMarkdownContainer"] p {{
-        color: {DUKE_WHITE};
-    }}
+   
     .css-1d391kg {{
         background-color: {DUKE_NAVY};
     }}
@@ -92,11 +93,6 @@ st.markdown(
 )
 
 
-# Initialize session state variables
-if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "system", "content": "You are a helpful assistant that can answer questions about Duke University."}]
-
-
 # Title and header
 st.markdown("""
     <div class="title-container" style="margin-top: -50px ;">
@@ -118,20 +114,40 @@ with st.sidebar:
 - Course information and details
                 """)
     
-    api_key = os.getenv("OPENAI_API_KEY")
+    st_openai_api_key = st.text_input("OpenAI API Key", type="password", help="Enter your OpenAI API key")
 
-    if not api_key:
-        st.markdown("Enter your OpenAI API key below to get started.")
-        # Ask user to input API key only if it's not found in env
-        api_key = st.text_input("OpenAI API Key", type="password", help="Enter your OpenAI API key")
-
-    if not api_key:
-        st.warning("Please enter your OpenAI API key here or add it to the .env file to continue.")
-    
     # Clear chat button
     if st.button("Clear Chat"):
         st.session_state.messages = []
         st.success("Chat history cleared!")
+
+system_prompt = """You are a helpful assistant for Duke University. You answer questions about Duke's programs, courses, professors, events, and related information using a set of tools. Be thorough, polite, and accurate. If something is unclear, ask follow-up questions to get more context.
+
+Guidelines:
+1. **If a user query is vague or underspecified**, do not assume. Instead, ask follow-up questions. For example, if someone asks “Who is Dr. Smith?”, ask what program or department they're in before calling a professor-related tool.
+2. **Use tools only when needed**. Think through the query: Is it about a program, course, professor, or event? Then pick the tool that best fits that need. If a name match seems fuzzy or incorrect, avoid responding with false confidence.
+3. **Avoid inaccurate tool calls**: For example, if a professor's name does not have an exact match, don't return information about someone with a similar name. Instead, say "I couldn't find a match — could you clarify which program they're associated with?"
+4. **For professor-related questions**, try to get their department or program (e.g., AIPI or MEM since you have tools for both) before selecting a tool. Some professors are only listed in specific databases. 
+5. **Use the web search tool** as a fallback for Duke-related queries that don't fit neatly into any other tool (e.g., "What is Dr. X researching currently?" or "What does Duke's housing policy look like?") OR if the data you get back from the other tools is not helpful, instead of saying "I dont know" try to use the web search tool to answer the question. Incase web search doesn't work either, you can use your own knowledge to answer the question.
+6. You are **not** allowed to answer questions that are not related to Duke University. This is very important. If a user query is **not related to Duke University**, respond by saying it’s out of scope and that you’re here to help with Duke-related questions.
+7. Always follow safe and ethical practices when answering questions.
+8. Provide links, references, and citations when relevant.
+
+Be concise when appropriate, but offer long, elaborate answers when more detail would be helpful.
+"""
+
+# Initialize session state variables
+if "messages" not in st.session_state:
+    st.session_state.messages = [{"role": "system", "content": system_prompt}]
+
+
+if openai_api_key or st_openai_api_key:
+    st.session_state.api_key = openai_api_key or st_openai_api_key
+    st.session_state.client = get_openai_client(st.session_state.api_key)
+else:
+    st.session_state.api_key = None
+    st.session_state.client = None
+
 
 # Display chat messages from session state
 for message in st.session_state.messages:
@@ -139,7 +155,7 @@ for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-if api_key:
+if st.session_state.client:
     # User input
     if user_input := st.chat_input("Enter your message here..."):
         
@@ -156,7 +172,7 @@ if api_key:
             status_container.info("Initializing...")
             
             response = None
-            for status in get_response(st.session_state.messages, api_key):
+            for status in get_response(st.session_state.messages):
                 if isinstance(status, str):
                     status_container.info(status)
                 else:
@@ -170,4 +186,4 @@ if api_key:
                 st.session_state.messages.append({"role": "assistant", "content": response.content})
 
 else:
-    st.error("Please enter your OpenAI API key here or add it to the .env file to continue.")
+    st.warning("Please enter your OpenAI API key here or add it to the .env file to continue.")

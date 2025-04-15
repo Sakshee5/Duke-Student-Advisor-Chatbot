@@ -3,7 +3,7 @@ TOOLS_SCHEMA = [
         "type": "function",
         "function": {
             "name": "mem_search",
-            "description": "Search for information about the MEM (Master of Engineering Management) program at Duke University",
+            "description": "Retrieve detailed information about the MEM (Master of Engineering Management) program at Duke University, including structure, specializations, admissions, and faculty.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -11,11 +11,6 @@ TOOLS_SCHEMA = [
                         "type": "string",
                         "description": "The search query about MEM program"
                     },
-                    "top_k": {
-                        "type": "integer",
-                        "description": "Number of results to return",
-                        "default": 3
-                    }
                 },
                 "required": ["query"]
             }
@@ -25,7 +20,7 @@ TOOLS_SCHEMA = [
         "type": "function",
         "function": {
             "name": "pratt_search",
-            "description": "Search for information about Pratt School of Engineering programs at Duke University",
+            "description": "Search for information about programs offered by the Pratt School of Engineering at Duke, including undergraduate and graduate engineering programs.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -33,11 +28,6 @@ TOOLS_SCHEMA = [
                         "type": "string",
                         "description": "The search query about Pratt programs"
                     },
-                    "top_k": {
-                        "type": "integer",
-                        "description": "Number of results to return",
-                        "default": 3
-                    }
                 },
                 "required": ["query"]
             }
@@ -47,7 +37,7 @@ TOOLS_SCHEMA = [
         "type": "function",
         "function": {
             "name": "get_courses",
-            "description": "Get all courses for a given subject at Duke University",
+            "description": "Get a list of courses for a specific subject or department at Duke University. Useful when a user asks about course offerings in a subject (e.g., 'What courses are offered in ECE?').",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -64,7 +54,7 @@ TOOLS_SCHEMA = [
         "type": "function",
         "function": {
             "name": "get_course_details",
-            "description": "Search for a course by subject and course title or course number",
+            "description": "Get detailed information for a specific course at Duke University by subject and either course number or course title. Best used when a user mentions a specific course code or name",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -92,7 +82,7 @@ TOOLS_SCHEMA = [
         "type": "function",
         "function": {
             "name": "get_events",
-            "description": "Get events from the Duke University Events API",
+            "description": "Get upcoming events listed in the Duke University Events system. Best used when a user asks about events, lectures, or seminars happening on campus.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -108,8 +98,8 @@ TOOLS_SCHEMA = [
     {
         "type": "function",
         "function": {
-            "name": "get_professor_info",
-            "description": "Get rating information about a professor at Duke University use this tool for any professor despite the program",
+            "name": "rate_my_professor_info",
+            "description": "Uses public data from RateMyProfessors to search for basic information and student ratings about a professor based on their name. Use this to get professor rating and reviews details that students have shared.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -127,7 +117,7 @@ TOOLS_SCHEMA = [
         "type": "function",
         "function": {
             "name": "get_AIPI_details",
-            "description": "This function / tool gets details about the Artificial Intelligence for Product Innovation Program also called !!! AIPI !!! use this for any queries regarding the program or for any information about professors if the progrgam is mentioned. When the query reltes to a Professor from the AIPI program this is the best tool to use",
+            "description": "Get detailed information about the Artificial Intelligence for Product Innovation (AIPI) program at Duke. This includes program details, admissions, and faculty info. If a professor is known to be part of AIPI, use this tool to retrieve relevant information about them.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -139,5 +129,23 @@ TOOLS_SCHEMA = [
                 "required": ["query"]
             }
         }
-    }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "web_search",
+            "description": "Search the web for Duke-specific queries when other tools do not apply or fail to provide results. Use this for fresh, uncommon, or non-standard Duke-related information (e.g., student organizations, niche policies).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The query to search the web for"
+                    }
+                },
+                "required": ["query"]
+            }
+        }
+    },
+
 ]

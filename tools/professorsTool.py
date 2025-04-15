@@ -47,13 +47,13 @@ def find_best_match(query, professors):
         return best_match
     return None
 
-def get_professor_info(professor_query, api_key = None):
+def rate_my_professor_info(professor_query):
     """
     Get information about a professor based on name or department.
     Returns professor rating information or an error message.
     
     Example:
-    >>> get_professor_info("Eric Fouh")
+    >>> rate_my_professor_info("Eric Fouh")
     {
         "name": "Eric Fouh",
         "department": "Computer Science",
@@ -84,5 +84,5 @@ def get_professor_info(professor_query, api_key = None):
 if __name__ == "__main__":
     # Example usage
     print("Example professor lookup:")
-    prof_info = get_professor_info("Eric Fouh")
+    prof_info = rate_my_professor_info("Eric Fouh")
     print(prof_info)

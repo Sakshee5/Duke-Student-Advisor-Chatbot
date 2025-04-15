@@ -1,151 +1,26 @@
-import os
-import math
-from dotenv import load_dotenv
-from pinecone import Pinecone, ServerlessSpec
-from langchain_openai import OpenAIEmbeddings
+from utils.pinecone_utils import initialize_pinecone_index, get_embeddings_model
+from utils.openai_client import get_openai_client, get_chat_completion
 from typing import List, Dict
-import PyPDF2
-import sys
-from pathlib import Path
+from utils.pinecone_utils import process_pdf
 
-# Add the project root directory to the Python path
-project_root = str(Path(__file__).parent.parent)
-sys.path.append(project_root)
-
-from utils.openai_client import get_openai_client, get_chat_completion, get_embeddings_model
-
-# Load API Key
-load_dotenv()
-pinecone_api_key = os.getenv("PINECONE_API_KEY")
-openai_api_key = os.getenv("OPENAI_API_KEY")
-
-# Initialize Pinecone client
-pc = Pinecone(api_key=pinecone_api_key)
-
-INDEX_NAME = "pratt-database"
-DIMENSION = 1536
-METRIC = "cosine"
-BATCH_SIZE = 100
-
-def initialize_pinecone_index():
-    """
-    Creates or retrieves an existing Pinecone index and returns the index object.
-    """
-    existing_indexes = [index["name"] for index in pc.list_indexes()]
-    
-    if INDEX_NAME not in existing_indexes:
-        print(f"Creating new Pinecone index: {INDEX_NAME}")
-        pc.create_index(
-            name=INDEX_NAME,
-            dimension=DIMENSION,  # Model dimension
-            metric=METRIC,        # Metric for similarity search
-            spec=ServerlessSpec(
-                cloud="aws",
-                region="us-east-1"
-            )
-        )
-
-    # Get index details and print the host URL
-    index_info = pc.describe_index(INDEX_NAME)
-    host_url = index_info['host']
-    os.environ["PINECONE_INDEX_HOST_PRATT"] = host_url
-
-    print(f"Pinecone index host: {host_url}")
-
-    # Connect to the index
-    return pc.Index(INDEX_NAME, host=host_url)
-
-
-def upsert_vectors(index, vectors, namespace="nutrition-text"):
-    """
-    Upserts vectors into the Pinecone index in batches, skipping if namespace already exists.
-    """
-    num_batches = math.ceil(len(vectors) / BATCH_SIZE)
-    
-    for i in range(num_batches):
-        batch = vectors[i * BATCH_SIZE : (i + 1) * BATCH_SIZE]
-        index.upsert(vectors=batch, namespace=namespace)
-        print(f"Upserted batch {i+1}/{num_batches}")
-
-    print(f"Successfully upserted {len(vectors)} vectors into Pinecone!")
-
-
-def process_pdf(pdf_path: str, namespace: str, api_key=None) -> None:
-    """
-    Process a PDF file, extract text page by page, create embeddings and store in Pinecone
-    """
-    if not api_key:
-        return "Error: No API key provided for Pratt PDF processing"
-    
-    # Create embeddings with user's API key
-    embeddings = get_embeddings_model(api_key)
-    if not embeddings:
-        return "Error: Could not initialize embeddings model for Pratt PDF processing"
-    
-    # Extract text from PDF page by page
-    pages = _extract_text_from_pdf(pdf_path)
-    
-    # Create embeddings for each page
-    vectors = []
-    for page_num, page_text in enumerate(pages, start=1):
-        # Split page text into chunks if needed
-       
-        embedding = embeddings.embed_query(page_text)
-        vectors.append({
-            'id': f"{namespace}-page{page_num}",
-            'values': embedding,
-            'metadata': {
-                'text': page_text,
-                'source': os.path.basename(pdf_path),
-                'page_number': page_num,
-                'pdf_path': pdf_path,
-            }
-        })
-    
-    # Store in Pinecone
-    index = initialize_pinecone_index()
-    upsert_vectors(index, vectors, namespace=namespace)
-
-def _extract_text_from_pdf(pdf_path: str) -> List[str]:
-    """
-    Extract text from a PDF file, returning a list of page texts
-    """
-    pages = []
-    with open(pdf_path, 'rb') as file:
-        pdf_reader = PyPDF2.PdfReader(file)
-        for page in pdf_reader.pages:
-            pages.append(page.extract_text())
-    return pages
-
-def delete_all_records(namespace: str = "pratt-handbook"):
-    """
-    Deletes all vectors from the specified namespace in the Pinecone index.
-    """
-    index = initialize_pinecone_index()
-    print(f"Deleting all vectors in namespace: '{namespace}'")
-    
-    index.delete(delete_all=True, namespace=namespace)
-    
-    print(f"All vectors deleted from namespace '{namespace}'.")
-
-
-
-def search(query: str, top_k: int = 3, namespace: str = "pratt-handbook", api_key=None) -> List[Dict]:
+def search(query: str) -> List[Dict]:
     """
     Search Pratt related content in the vector database
     """
-    if not api_key:
-        return "Error: No API key provided for Pratt Search"
+    top_k = 3
+    namespace = "pratt-handbook"
+    index_name = "pratt-database"
+    dimension = 1536
+    metric = "cosine"
     
-    # Create embeddings with user's API key
-    embeddings = get_embeddings_model(api_key)
+    embeddings = get_embeddings_model()
     if not embeddings:
         return "Error: Could not initialize embeddings model for Pratt Search"
     # Create embedding for the query
     query_embedding = embeddings.embed_query(query)
     
     # Initialize index
-    index = initialize_pinecone_index()
+    index = initialize_pinecone_index(index_name, dimension, metric, "PRATT")
     
     # Search in Pinecone
     results = index.query(
@@ -164,8 +39,7 @@ Question: {query}
 """}
     ]
 
-    client = get_openai_client(openai_api_key)
-    response = get_chat_completion(client, messages)
+    response = get_chat_completion(messages)
     if response is None:
         return "❌ Failed to get a valid response from OpenAI."
     answer = response.content

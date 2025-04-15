@@ -2,11 +2,8 @@ import requests
 from datetime import datetime
 from urllib.parse import quote
 import json
-from openai import OpenAI
-from dotenv import load_dotenv
-import os
 import re
-from utils.openai_client import get_chat_completion, get_openai_client
+from utils.openai_client import get_chat_completion
 
 # Load groups and categories from the correct relative paths
 GROUPS_FILE = "data/eventsData/groups.txt"
@@ -19,36 +16,24 @@ with open(GROUPS_FILE, "r") as f:
 with open(CATEGORIES_FILE, "r") as f:
     categories_list = [line.strip() for line in f if line.strip()]
 
-def get_event_filters_with_gpt(user_prompt, groups=['All'], categories=['All'], api_key=None):
-    client = get_openai_client(api_key)
+def get_event_filters_with_gpt(user_prompt, groups=['All'], categories=['All']):
 
-    if not client:
-        return {
-            "error": "No valid API key provided",
-            "future_days": 30,
-            "groups": [],
-            "categories": [],
-            "target_date": None,
-            "location_keywords": []
-        }
-    
-    system_prompt = (
-        "The year is 2025. You are an assistant that extracts event filters for an event calendar API. "
-        "Given a user query and lists of valid 'groups' and 'categories', extract:\n"
-        "- the number of future days (default to 30 if not mentioned)\n"
-        "- matching group names from the list\n"
-        "- matching category names from the list\n"
-        "- the specific date (if mentioned, e.g., 'April 18') as YYYY-MM-DD format\n"
-        "- location keywords (e.g., 'downtown', 'west campus', 'chapel')\n\n"
-        "Respond in JSON format as:\n"
-        "{\n"
-        ' "future_days": <int>,\n'
-        ' "groups": [<list of strings>],\n'
-        ' "categories": [<list of strings>],\n'
-        ' "target_date": "<optional date in YYYY-MM-DD>",\n'
-        ' "location_keywords": [<list of location strings>]\n'
-        '}'
-    )
+    system_prompt = """"The year is 2025. You are an assistant that extracts event filters for an event calendar API. Given a user query and lists of valid 'groups' and 'categories', extract:
+
+1. The number of future days (default to 30 if not mentioned)
+2. Matching group names from the list
+3. Matching category names from the list
+4. The specific date (if mentioned, e.g., 'April 18') as YYYY-MM-DD format
+5. Location keywords (e.g., 'downtown', 'west campus', 'chapel')
+
+Respond in JSON format as:
+{
+"future_days": <int>,
+"groups": [<list of strings>],
+"categories": [<list of strings>],
+"target_date": "<optional date in YYYY-MM-DD>",
+"location_keywords": [<list of location strings>]
+}"""
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -62,7 +47,7 @@ Available categories:
 """}
     ]
 
-    response = get_chat_completion(client, messages)
+    response = get_chat_completion( messages)
 
     content = response.content.strip()
     if content.startswith("```"):
@@ -236,7 +221,7 @@ def fetch_filtered_events_data(categories=None, future_days=1, groups=None, loca
         return f"❌ Error fetching events: {e}"
 
 def get_events(query, api_key=None):
-    filters = get_event_filters_with_gpt(query, groups_list, categories_list, api_key)
+    filters = get_event_filters_with_gpt(query, groups_list, categories_list)
 
     groups = filters.get("groups", [])
     categories = filters.get("categories", [])
@@ -256,7 +241,7 @@ def get_events(query, api_key=None):
 if __name__ == "__main__":
     api_key = input("Please enter your OpenAI API Key: ")
     user_query = input("What kind of events are you looking for?\n> ")
-    filters = get_event_filters_with_gpt(user_query, groups_list, categories_list, api_key)
+    filters = get_event_filters_with_gpt(user_query, groups_list, categories_list)
 
     print("\n🧠 GPT-Extracted Filters:")
     print(json.dumps(filters, indent=2))
