@@ -3,18 +3,11 @@ import csv
 import ollama
 import time
 import pandas as pd
-import os
-import sys
 
-# Add the project root directory to the Python path
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(project_root)
 
-from utils.function_calling import get_response
-
-def load_qa_pairs(csv_path):
+def load_qa_pairs(excel_path):
     """Load questions from a excel file."""
-    df = pd.read_csv(csv_path, encoding='latin1')
+    df = pd.read_excel(excel_path)
     return df
 
 def evaluate_qa_pair(question, answer, model_name):
@@ -117,44 +110,23 @@ Please format your output as a JSON object using the structure below:
                 }
 
 def main():
-    csv_path = "evaluation/eval_Q_data.csv"
+    csv_path = "evaluation/eval_QA_data.xlsx"
 
     print(f"Loading Questions from {csv_path}...")
-    questions = load_qa_pairs(csv_path)['questions']
+    df = load_qa_pairs(csv_path)
+    print(df)
+    questions = df['questions']
+    answers = df['answer']
     print(questions)
+    print(answers)
     
     model_name = "llama3:8b"
     results = []
-    
-    total_pairs = len(questions)
-    for idx, question in enumerate(questions):
-        messages = [{"role": "user", "content": question}]
-        answer = "Error"  # Default value
+
+    for idx, (question, answer) in enumerate(zip(questions, answers)):
         
         try:
-            # Set a timeout for the response
-            max_iterations = 5  # Maximum number of iterations to wait for response
-            current_iteration = 0
-            
-            for status in get_response(messages):
-                if isinstance(status, str):
-                    print(status)
-                else:
-                    response = status
-                    break
-                    
-                current_iteration += 1
-                if current_iteration >= max_iterations:
-                    print("Warning: Reached maximum iterations waiting for response")
-                    break
-            
-            if response and hasattr(response, 'content'):
-                answer = response.content
-            else:
-                print("Warning: No valid response received")
-                answer = "Error"
-
-            print(f"Evaluating pair {idx+1}/{total_pairs}...")
+            print(f"Evaluating pair {idx+1}...")
             evaluation = evaluate_qa_pair(question, answer, model_name)
             
             results.append({
@@ -166,7 +138,7 @@ def main():
             })
 
         except Exception as e:
-            print(f"Error evaluating pair {idx+1}/{total_pairs}: {e}")
+            print(f"Error evaluating pair {idx+1}: {e}")
             results.append({
                 "Input Question": question,
                 "Input Answer": answer,
@@ -174,9 +146,6 @@ def main():
                 "Clarity of answer (1-5)": "Error",
                 "General Comments": f"Error: {str(e)}"
             })
-
-        if idx == 49:
-            break
 
     
     # Write results to CSV

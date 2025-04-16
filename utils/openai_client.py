@@ -9,7 +9,11 @@ def get_openai_client(api_key):
     return OpenAI(api_key=api_key)
 
 def get_chat_completion(messages, tools=None, tool_choice="auto"):
-    client = st.session_state.client
+
+    try:
+        client = st.session_state.client
+    except:
+        client = get_openai_client(st.session_state.api_key)
 
     # Build request kwargs conditionally
     kwargs = {
@@ -33,7 +37,10 @@ def get_embeddings_model():
     """
     Creates and returns an OpenAIEmbeddings object using the provided API key
     """
-    api_key = st.session_state.api_key
+    try:
+        api_key = st.session_state.api_key
+    except:
+        api_key = os.getenv("OPENAI_API_KEY")
 
     return OpenAIEmbeddings(
         model="text-embedding-3-small",
