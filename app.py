@@ -18,7 +18,7 @@ DUKE_GRAY = "#666666"
 
 # Configure the page
 st.set_page_config(
-    page_title="Duke Student Advisor",
+    page_title="Blue Devils in the Details",
     page_icon="🔵",
     layout="wide",
 )
@@ -96,7 +96,7 @@ st.markdown(
 # Title and header
 st.markdown("""
     <div class="title-container" style="margin-top: -50px ;">
-        <h1 class="main-title">Duke Student Advisor</h1>
+        <h1 class="main-title">Blue Devils in the Details</h1>
     </div>
     """, 
     unsafe_allow_html=True
@@ -132,6 +132,7 @@ Guidelines:
 6. You are **not** allowed to answer questions that are not related to Duke University. This is very important. If a user query is **not related to Duke University**, respond by saying it’s out of scope and that you’re here to help with Duke-related questions.
 7. Always follow safe and ethical practices when answering questions.
 8. Provide links, references, and citations when relevant.
+9. !!!!!!! When asked about the Artificial Intelligence for Product Innovation or AIPI course make sure to use the get_courses tool in your planning !!!!!!!!!
 
 Be concise when appropriate, but offer long, elaborate answers when more detail would be helpful.
 """
