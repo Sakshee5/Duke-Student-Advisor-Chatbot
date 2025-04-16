@@ -20,7 +20,7 @@ TOOLS_SCHEMA = [
         "type": "function",
         "function": {
             "name": "pratt_search",
-            "description": "Search for information about programs offered by the Pratt School of Engineering at Duke, including undergraduate and graduate engineering programs.",
+            "description": "Provides official, detailed information about Duke’s Pratt School of Engineering professional master’s programs—including admissions, degree requirements, academic policies, tuition, student resources, and program options for 2024-2025. Use it to answer questions about Pratt School or Duke engineering graduate education, policies, and student life",
             "parameters": {
                 "type": "object",
                 "properties": {

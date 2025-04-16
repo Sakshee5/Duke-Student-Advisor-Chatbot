@@ -13,7 +13,7 @@ def get_chat_completion(messages, tools=None, tool_choice="auto"):
 
     # Build request kwargs conditionally
     kwargs = {
-        "model": "gpt-4o-mini",
+        "model": "gpt-4o",
         "messages": messages,
         "temperature": 0.1
     }
