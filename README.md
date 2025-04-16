@@ -61,6 +61,9 @@ The project includes a robust evaluation framework:
   - Accuracy and completeness
 - Generates detailed evaluation reports
 
+## Live Demo
+Access the deployed app here:
+👉 Duke Student Advisor Chatbot [Live App](http://13.218.146.34:8503)
 ## Getting Started
 
 1. **Prerequisites**
